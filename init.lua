@@ -223,6 +223,56 @@ require('lazy').setup({
 
   { "folke/twilight.nvim", opts = { context = 15 } },
 
+  -- NEW: Visual indent guides — especially useful for Python
+  {
+    "lukas-reineke/indent-blankline.nvim",
+    main = "ibl",
+    event = "BufReadPost",
+    opts = {
+      indent = { char = "│" },
+      scope = { enabled = true, show_start = false },
+      exclude = { filetypes = { "help", "lazy", "mason", "notify", "toggleterm" } },
+    },
+  },
+
+  -- NEW: Show current function/class context at top of screen (great for long R/Python files)
+  {
+    "nvim-treesitter/nvim-treesitter-context",
+    event = "BufReadPost",
+    opts = {
+      max_lines = 3,         -- max lines of context shown
+      min_window_height = 20,
+      mode = "cursor",
+    },
+    keys = {
+      { "<leader>tc", "<cmd>TSContextToggle<cr>", desc = "[T]oggle [C]ontext" },
+    },
+  },
+
+  -- NEW: Oil.nvim — edit the filesystem like a buffer (open with <leader>o or -)
+  {
+    "stevearc/oil.nvim",
+    dependencies = { "nvim-tree/nvim-web-devicons" },
+    keys = {
+      { "<leader>o", "<cmd>Oil<cr>",           desc = "[O]il file explorer" },
+      { "-",         "<cmd>Oil<cr>",           desc = "Open parent directory" },
+    },
+    opts = {
+      default_file_explorer = true,
+      columns = { "icon", "permissions", "size", "mtime" },
+      view_options = { show_hidden = true },
+      -- Keys inside the oil buffer
+      keymaps = {
+        ["<CR>"]  = "actions.select",
+        ["-"]     = "actions.parent",
+        ["_"]     = "actions.open_cwd",
+        ["gs"]    = "actions.change_sort",
+        ["gx"]    = "actions.open_external",
+        ["g."]    = "actions.toggle_hidden",
+      },
+    },
+  },
+
   -- ==========================================
   -- B. EDITING ENHANCEMENTS
   -- ==========================================
@@ -232,8 +282,7 @@ require('lazy').setup({
     event = 'InsertEnter',
     config = function()
       local autopairs = require('nvim-autopairs')
-      autopairs.setup { check_ts = true } -- Use treesitter for smarter pairing
-      -- Hook into nvim-cmp so accepted completions also get paired
+      autopairs.setup { check_ts = true }
       local cmp_autopairs = require('nvim-autopairs.completion.cmp')
       require('cmp').event:on('confirm_done', cmp_autopairs.on_confirm_done())
     end,
@@ -243,14 +292,12 @@ require('lazy').setup({
     "kylechui/nvim-surround",
     event = "VeryLazy",
     opts = {},
-    -- Usage: ysiw" to surround word with quotes, cs"' to change to single, ds" to delete
   },
 
   { -- Better commenting: gc + motion
     'numToStr/Comment.nvim',
     event = 'VeryLazy',
     opts = {},
-    -- gcc to comment line, gc + motion, gcap to comment paragraph
   },
 
   { -- Highlight matching bracket/paren
@@ -260,70 +307,65 @@ require('lazy').setup({
   },
 
   -- ==========================================
-  -- C. DOMAIN SPECIFIC (LaTeX, R, Markdown)
+  -- C. DOMAIN SPECIFIC (LaTeX, R, Python, Quarto)
   -- ==========================================
-{
-  "lervag/vimtex",
-  lazy = false,
-  ft = { "tex", "bib" },
-  init = function()
-    -- Viewer
-    vim.g.vimtex_view_method = 'skim'
-    vim.g.vimtex_view_skim_sync = 1       -- Forward sync on compile
-    vim.g.vimtex_view_skim_activate = 1   -- Focus Skim after jump
 
-    -- Compiler
-    vim.g.vimtex_compiler_method = 'latexmk'
-    vim.g.vimtex_compiler_latexmk = {
-      aux_dir = '.aux',        -- Keep root dir clean
-      out_dir = '.out',
-      callback = 1,
-      continuous = 1,          -- Auto-recompile on save
-      executable = 'latexmk',
-      options = {
-        '-pdf',
-        '-shell-escape',       -- Needed for minted, tikzexternalize, etc.
-        '-verbose',
-        '-file-line-error',
-        '-synctex=1',          -- Required for forward/inverse sync
-        '-interaction=nonstopmode',
-      },
-    }
+  {
+    "lervag/vimtex",
+    lazy = false,
+    ft = { "tex", "bib" },
+    init = function()
+      vim.g.vimtex_view_method = 'skim'
+      vim.g.vimtex_view_skim_sync = 1
+      vim.g.vimtex_view_skim_activate = 1
 
-    -- Syntax / concealment (makes source cleaner to read)
-    vim.g.vimtex_syntax_enabled = 1
-    vim.opt.conceallevel = 2         -- Renders \textbf{} → bold visually, etc.
-    vim.g.vimtex_syntax_conceal = {
-      accents = 1,
-      ligatures = 1,
-      cites = 1,
-      fancy = 1,
-      greek = 1,
-      math_bounds = 1,
-      math_delimiters = 1,
-      math_fracs = 1,
-      math_super_sub = 1,
-      math_symbols = 1,
-      sections = 0,
-      styles = 1,
-    }
+      vim.g.vimtex_compiler_method = 'latexmk'
+      vim.g.vimtex_compiler_latexmk = {
+        aux_dir = '.aux',
+        out_dir = '.out',
+        callback = 1,
+        continuous = 1,
+        executable = 'latexmk',
+        options = {
+          '-pdf',
+          '-shell-escape',
+          '-verbose',
+          '-file-line-error',
+          '-synctex=1',
+          '-interaction=nonstopmode',
+        },
+      }
 
-    -- TOC settings
-    vim.g.vimtex_toc_config = {
-      split_pos = 'left',
-      split_width = 30,
-      show_help = 0,
-    }
+      vim.g.vimtex_syntax_enabled = 1
+      vim.opt.conceallevel = 2
+      vim.g.vimtex_syntax_conceal = {
+        accents = 1,
+        ligatures = 1,
+        cites = 1,
+        fancy = 1,
+        greek = 1,
+        math_bounds = 1,
+        math_delimiters = 1,
+        math_fracs = 1,
+        math_super_sub = 1,
+        math_symbols = 1,
+        sections = 0,
+        styles = 1,
+      }
 
-    -- Quickfix / error handling
-    vim.g.vimtex_quickfix_mode = 2        -- Open but don't focus
-    vim.g.vimtex_quickfix_open_on_warning = 0  -- Warnings won't pop it open
+      vim.g.vimtex_toc_config = {
+        split_pos = 'left',
+        split_width = 30,
+        show_help = 0,
+      }
 
-    -- Disable features you don't use (speeds things up)
-    vim.g.vimtex_imaps_enabled = 0        -- Insert mode math maps (if you use snippets instead)
-    vim.g.vimtex_complete_enabled = 1     -- Omni-completion for \cite{}, \ref{}, etc.
-  end,
-},
+      vim.g.vimtex_quickfix_mode = 2
+      vim.g.vimtex_quickfix_open_on_warning = 0
+      vim.g.vimtex_imaps_enabled = 0
+      vim.g.vimtex_complete_enabled = 1
+    end,
+  },
+
   { -- Live Browser Markdown Preview
     "iamcco/markdown-preview.nvim",
     cmd = { "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop" },
@@ -337,6 +379,107 @@ require('lazy').setup({
     dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' },
     opts = {},
     ft = { "markdown", "quarto" },
+  },
+
+  -- NEW: Send code to R/Python REPL without leaving Neovim
+  -- Usage: <leader>sl = send line, <leader>sc = send motion, <leader>sf = send file
+  -- <leader>rs = open REPL, <leader>rq = close REPL
+  {
+    "Vigemus/iron.nvim",
+    keys = {
+      { "<leader>rs", "<cmd>IronRepl<cr>",    desc = "[R]epl [S]tart" },
+      { "<leader>rr", "<cmd>IronRestart<cr>", desc = "[R]epl [R]estart" },
+      { "<leader>rq", "<cmd>IronHide<cr>",    desc = "[R]epl [Q]uit/Hide" },
+      { "<leader>rf", "<cmd>IronFocus<cr>",   desc = "[R]epl [F]ocus" },
+    },
+    config = function()
+      require("iron.core").setup({
+        config = {
+          -- Detect filetype automatically; falls back to python
+          scratch_repl = true,
+          repl_definition = {
+            python = {
+              -- Uses ipython if available, falls back to python3
+              command = function()
+                local ipython = vim.fn.executable("ipython") == 1
+                return ipython and { "ipython", "--no-autoindent" } or { "python3" }
+              end,
+            },
+            r = { command = { "R" } },
+          },
+          -- Open REPL as a vertical split on the right (40% width)
+          repl_open_cmd = require("iron.view").right("40%"),
+        },
+        keymaps = {
+          send_motion   = "<leader>sc",  -- e.g. <leader>scip sends paragraph
+          visual_send   = "<leader>sc",  -- send visual selection
+          send_file     = "<leader>sf",  -- send entire file
+          send_line     = "<leader>sl",  -- send current line
+          send_paragraph= "<leader>sp",  -- send paragraph (great for R/Python blocks)
+          send_until_cursor = "<leader>su", -- send from top to cursor
+          cr            = "<leader>s<cr>",
+          interrupt     = "<leader>s<space>",
+          exit          = "<leader>sq",
+          clear         = "<leader>sc",
+        },
+        highlight = { italic = true },
+        ignore_blank_lines = true,
+      })
+    end,
+  },
+
+  -- NEW: Quarto — notebook-style .qmd editing with LSP in code cells
+  -- Run cells with iron.nvim, get completions/diagnostics per language
+  {
+    "quarto-dev/quarto-nvim",
+    ft = { "quarto" },
+    dependencies = {
+      -- otter.nvim: injects LSP into code chunks inside .qmd files
+      {
+        "jmbuhr/otter.nvim",
+        opts = {
+          lsp = { diagnostic_update_events = { "BufWritePost" } },
+          buffers = { set_filetype = true },
+        },
+      },
+    },
+    config = function()
+      require("quarto").setup({
+        debug = false,
+        closePreviewOnExit = true,
+        lspFeatures = {
+          enabled = true,
+          chunks = "all",
+          languages = { "python", "r", "julia", "bash" },
+          diagnostics = { enabled = true, triggers = { "BufWritePost" } },
+          completion = { enabled = true },
+        },
+        codeRunner = {
+          enabled = true,
+          default_method = "iron",  -- uses iron.nvim to run cells
+          ft_runners = {
+            python = "iron",
+            r      = "iron",
+          },
+        },
+        keymap = {
+          -- <leader>qr = run cell, <leader>qa = run all, <leader>qp = run to cursor
+          hover         = "K",
+          definition    = "gd",
+          rename        = "<leader>rn",
+          references    = "gr",
+          format        = "<leader>f",
+          run_cell              = "<leader>qr",
+          run_above             = "<leader>qu",
+          run_below             = "<leader>qd",
+          run_all               = "<leader>qa",
+          run_line              = "<leader>ql",
+          run_range             = "<leader>qr",
+          goto_prev_cell        = "[q",
+          goto_next_cell        = "]q",
+        },
+      })
+    end,
   },
 
   -- ==========================================
@@ -377,7 +520,7 @@ require('lazy').setup({
     branch = 'master',
     build = ':TSUpdate',
     dependencies = {
-      'nvim-treesitter/nvim-treesitter-textobjects', -- af/if for functions, ac/ic for classes
+      'nvim-treesitter/nvim-treesitter-textobjects',
     },
     config = function()
       require('nvim-treesitter.configs').setup({
@@ -392,12 +535,12 @@ require('lazy').setup({
             enable = true,
             lookahead = true,
             keymaps = {
-              ['af'] = '@function.outer',  -- around function
-              ['if'] = '@function.inner',  -- inside function
-              ['ac'] = '@class.outer',     -- around class
-              ['ic'] = '@class.inner',     -- inside class
-              ['aa'] = '@parameter.outer', -- around argument
-              ['ia'] = '@parameter.inner', -- inside argument
+              ['af'] = '@function.outer',
+              ['if'] = '@function.inner',
+              ['ac'] = '@class.outer',
+              ['ic'] = '@class.inner',
+              ['aa'] = '@parameter.outer',
+              ['ia'] = '@parameter.inner',
             },
           },
           move = {
@@ -420,7 +563,10 @@ require('lazy').setup({
       format_on_save = { timeout_ms = 500, lsp_format = 'fallback' },
       formatters_by_ft = {
         lua    = { 'stylua' },
-        python = { "isort", "black" },
+        -- CHANGED: use ruff_format instead of black+isort (you already have ruff LSP;
+        -- this is faster and keeps everything consistent — ruff handles imports too)
+        python = { 'ruff_format', 'ruff_organize_imports' },
+        r      = { 'styler' },  -- NEW: R formatter (install with: install.packages("styler"))
       },
     },
   },
@@ -438,14 +584,16 @@ require('lazy').setup({
         dependencies = {
           {
             'rafamadriz/friendly-snippets',
-            config = function() require('luasnip.loaders.from_vscode').lazy_load() end,
+            config = function()
+              require('luasnip.loaders.from_vscode').lazy_load({ exclude = { "tex" } })
+            end,
           },
         },
       },
       'saadparwaiz1/cmp_luasnip',
       'hrsh7th/cmp-nvim-lsp',
       'hrsh7th/cmp-path',
-      'hrsh7th/cmp-omni',  -- kept for LaTeX filetype override below
+      'hrsh7th/cmp-omni',
     },
     config = function()
       local cmp = require 'cmp'
@@ -465,6 +613,12 @@ require('lazy').setup({
           luasnip.text_node({ "\\begin{theorem}", "\t" }),
           luasnip.insert_node(1),
           luasnip.text_node({ "", "\\end{theorem}" })
+        }),
+        -- FIXED: was "\\begi{lemma}" (typo), now "\\begin{lemma}"
+        luasnip.snippet("ble", {
+          luasnip.text_node({ "\\begin{lemma}", "\t" }),
+          luasnip.insert_node(1),
+          luasnip.text_node({ "", "\\end{lemma}" })
         }),
         luasnip.snippet("bpf", {
           luasnip.text_node({ "\\begin{proof}", "\t" }),
@@ -493,10 +647,55 @@ require('lazy').setup({
           luasnip.insert_node(2),
           luasnip.text_node("}")
         }),
+        -- NEW: Common math snippets for statistics/probability work
+        luasnip.snippet("bpr", {   -- proposition
+          luasnip.text_node({ "\\begin{proposition}", "\t" }),
+          luasnip.insert_node(1),
+          luasnip.text_node({ "", "\\end{proposition}" })
+        }),
+        luasnip.snippet("bco", {   -- corollary
+          luasnip.text_node({ "\\begin{corollary}", "\t" }),
+          luasnip.insert_node(1),
+          luasnip.text_node({ "", "\\end{corollary}" })
+        }),
+        luasnip.snippet("bde", {   -- definition
+          luasnip.text_node({ "\\begin{definition}", "\t" }),
+          luasnip.insert_node(1),
+          luasnip.text_node({ "", "\\end{definition}" })
+        }),
+        luasnip.snippet("bal", {   -- align*
+          luasnip.text_node({ "\\begin{align*}", "\t" }),
+          luasnip.insert_node(1),
+          luasnip.text_node({ "", "\\end{align*}" })
+        }),
+        luasnip.snippet("EE", {    -- expectation E[X]
+          luasnip.text_node("\\mathbb{E}\\left["),
+          luasnip.insert_node(1),
+          luasnip.text_node("\\right]")
+        }),
+        luasnip.snippet("PP", {    -- probability P(A)
+          luasnip.text_node("\\mathbb{P}\\left("),
+          luasnip.insert_node(1),
+          luasnip.text_node("\\right)")
+        }),
+        luasnip.snippet("VV", {    -- variance Var[X]
+          luasnip.text_node("\\text{Var}\\left["),
+          luasnip.insert_node(1),
+          luasnip.text_node("\\right]")
+        }),
+        luasnip.snippet("iid", {
+          luasnip.text_node("\\overset{\\text{iid}}{\\sim}")
+        }),
+        luasnip.snippet("sum", {   -- sum with limits
+          luasnip.text_node("\\sum_{"),
+          luasnip.insert_node(1, "i=1"),
+          luasnip.text_node("}^{"),
+          luasnip.insert_node(2, "n"),
+          luasnip.text_node("}")
+        }),
       })
       -- ==========================================
 
-      -- Global sources: LSP + snippets + path only (no random buffer words)
       cmp.setup {
         snippet = {
           expand = function(args) luasnip.lsp_expand(args.body) end,
@@ -511,20 +710,27 @@ require('lazy').setup({
           ['<CR>']      = cmp.mapping.confirm { select = true },
           ['<C-Space>'] = cmp.mapping.complete {},
           ['<C-e>']     = cmp.mapping.abort(),
-          ['<C-l>'] = cmp.mapping(function()
-            if luasnip.expand_or_locally_jumpable() then luasnip.expand_or_jump() end
+
+          ['<Tab>'] = cmp.mapping(function(fallback)
+            if luasnip.expand_or_locally_jumpable() then
+              luasnip.expand_or_jump()
+            else
+              fallback()
+            end
           end, { 'i', 's' }),
-          ['<C-h>'] = cmp.mapping(function()
-            if luasnip.locally_jumpable(-1) then luasnip.jump(-1) end
+          ['<S-Tab>'] = cmp.mapping(function(fallback)
+            if luasnip.locally_jumpable(-1) then
+              luasnip.jump(-1)
+            else
+              fallback()
+            end
           end, { 'i', 's' }),
         },
         sources = {
           { name = 'nvim_lsp', priority = 1000 },
           { name = 'luasnip',  priority = 750 },
           { name = 'path',     priority = 250 },
-          -- No 'buffer' source: avoids random word pollution across all filetypes
         },
-        -- Better completion menu appearance
         formatting = {
           format = function(entry, vim_item)
             vim_item.menu = ({
@@ -538,13 +744,12 @@ require('lazy').setup({
         },
       }
 
-      -- LaTeX: VimTeX omni completion + snippets (LSP stays active via texlab)
       cmp.setup.filetype({ "tex" }, {
         sources = {
-          { name = 'omni',    priority = 1000 }, -- VimTeX: math, envs, citations, refs
-          { name = 'luasnip', priority = 900 },
-          { name = 'nvim_lsp', priority = 750 }, -- texlab for structure/labels
-          { name = 'path',    priority = 250 },
+          { name = 'omni',     priority = 1000 },
+          { name = 'luasnip',  priority = 900 },
+          { name = 'nvim_lsp', priority = 750 },
+          { name = 'path',     priority = 250 },
         }
       })
     end,
@@ -558,17 +763,15 @@ require('lazy').setup({
       'WhoIsSethDaniel/mason-tool-installer.nvim',
     },
     config = function()
-      -- Nicer diagnostic display
       vim.diagnostic.config({
         virtual_text = { prefix = '●' },
         float = { border = 'rounded', source = true },
         signs = true,
         underline = true,
-        update_in_insert = false, -- Don't show errors while typing mid-expression
+        update_in_insert = false,
         severity_sort = true,
       })
 
-      -- LSP Keybinds (only active when an LSP is attached)
       vim.api.nvim_create_autocmd('LspAttach', {
         callback = function(event)
           local map = function(keys, func, desc)
@@ -587,16 +790,14 @@ require('lazy').setup({
           map('<leader>ds', builtin.lsp_document_symbols,  '[D]ocument [S]ymbols')
           map('<leader>ws', builtin.lsp_dynamic_workspace_symbols, '[W]orkspace [S]ymbols')
 
-          -- Diagnostic navigation
           map(']d', function() vim.diagnostic.goto_next({ float = true }) end, 'Next Diagnostic')
           map('[d', function() vim.diagnostic.goto_prev({ float = true }) end, 'Prev Diagnostic')
         end,
       })
 
-      -- Language Servers
       local servers = {
         pyright  = {},
-	julials  = {},
+        julials  = {},
         ruff     = {},
         clangd   = {},
         r_language_server = {},
