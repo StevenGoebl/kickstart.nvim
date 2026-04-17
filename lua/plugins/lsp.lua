@@ -42,7 +42,7 @@ return {
     },
     config = function()
       vim.diagnostic.config({
-        virtual_text  = { prefix = '●' },
+        virtual_text  = false,
         float         = { border = 'rounded', source = true },
         signs         = true,
         underline     = true,
@@ -166,4 +166,24 @@ return {
     end,
   },
 
+{
+    'danymat/neogen',
+    dependencies = { 'nvim-treesitter/nvim-treesitter' },
+    config = function()
+      require('neogen').setup {
+        -- If you use Neovim 0.10+, you can use the built-in native snippet engine!
+        -- Otherwise, keep this as 'luasnip' if you have LuaSnip installed.
+        snippet_engine = 'nvim', 
+      }
+      
+      vim.keymap.set('n', '<leader>nf', ":lua require('neogen').generate()<CR>", { desc = 'Generate [N]eogen [F]unction Docs' })
+    end,
+  },
+{
+    'R-nvim/R.nvim',
+    lazy = false,
+    -- Note: R.nvim relies heavily on your "LocalLeader" key. 
+    -- If you haven't explicitly set a maplocalleader in your config, 
+    -- Neovim defaults to the backslash (\) key.
+  },
 }
