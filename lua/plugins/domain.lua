@@ -74,7 +74,6 @@ return {
                   or  { "python3" }
               end,
             },
-            r      = { command = { "radian" } },
             quarto = { command = { "radian" } },
             rmd    = { command = { "radian" } },
             julia  = { command = { "julia", "--project" } },
@@ -90,8 +89,6 @@ return {
           send_until_cursor = "<leader>eu",
           cr                = "<leader>e<cr>",
           interrupt         = "<leader>e<space>",
-          -- FIX: was <leader>eq — now <leader>eQ to avoid shadowing <leader>q
-          --      (diagnostic quickfix list).
           exit              = "<leader>eQ",
           clear             = "<leader>eC",
         },
@@ -120,8 +117,6 @@ return {
         lspFeatures = {
           enabled  = true,
           chunks   = "all",
-          -- FIX: added julia back — otter.nvim can inject Julia LSP into
-          --      code cells now that julials is restored.
           languages    = { "python", "r", "julia", "bash" },
           diagnostics  = { enabled = true, triggers = { "BufWritePost" } },
           completion   = { enabled = true },
@@ -132,16 +127,11 @@ return {
           ft_runners     = { python = "iron", r = "iron" },
         },
         keymap = {
-          -- FIX: removed K, gd, gr, <leader>rn, <leader>f from here.
-          --      otter.nvim injects LSP into code cells, so LspAttach fires
-          --      and sets those keys automatically — defining them twice caused
-          --      silent overwrites depending on load order.
           run_cell       = "<leader>qr",
           run_above      = "<leader>qu",
           run_below      = "<leader>qd",
           run_all        = "<leader>qa",
           run_line       = "<leader>ql",
-          -- FIX: run_range was also "<leader>qr" — duplicate of run_cell.
           run_range      = "<leader>qR",
           goto_prev_cell = "[q",
           goto_next_cell = "]q",
@@ -153,8 +143,6 @@ return {
   { -- Rust (replaces rust LSP in nvim-lspconfig — do not add rust_analyzer there)
     'mrcjkb/rustaceanvim',
     version = '^5',
-    -- FIX: had both `lazy = false` and `ft = {'rust'}` — contradictory.
-    --      `ft` is sufficient: plugin loads only for Rust files.
     ft = { 'rust' },
     config = function()
       vim.g.rustaceanvim = {

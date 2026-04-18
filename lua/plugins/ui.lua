@@ -115,13 +115,10 @@ return {
         local map = function(mode, l, r, desc)
           vim.keymap.set(mode, l, r, { buffer = bufnr, desc = 'Git: ' .. desc })
         end
-        -- FIX: ]c/[c were conflicting with treesitter class nav.
-        -- Gitsigns keeps ]c/[c (hunk navigation is more frequent).
         map('n', ']c',          gs.next_hunk,       'Next hunk')
         map('n', '[c',          gs.prev_hunk,       'Prev hunk')
         map('n', '<leader>gb',  gs.blame_line,      '[G]it [B]lame line')
         map('n', '<leader>gp',  gs.preview_hunk,    '[G]it [P]review hunk')
-        -- FIX: was <leader>gr — too easy to confuse with `gr` (LSP references).
         map('n', '<leader>gR',  gs.reset_hunk,      '[G]it [R]eset hunk')
         map('n', '<leader>gs',  gs.stage_hunk,      '[G]it [S]tage hunk')
         map('n', '<leader>gu',  gs.undo_stage_hunk, '[G]it [U]ndo stage hunk')

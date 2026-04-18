@@ -173,7 +173,7 @@ return {
       require('neogen').setup {
         -- If you use Neovim 0.10+, you can use the built-in native snippet engine!
         -- Otherwise, keep this as 'luasnip' if you have LuaSnip installed.
-        snippet_engine = 'nvim', 
+        snippet_engine = 'luasnip',
       }
       
       vim.keymap.set('n', '<leader>nf', ":lua require('neogen').generate()<CR>", { desc = 'Generate [N]eogen [F]unction Docs' })
